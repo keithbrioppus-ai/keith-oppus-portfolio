@@ -26,7 +26,8 @@ export type FlowNode = {
   tone?: 'start' | 'good'
 }
 
-export type FlowEdge = { from: string; to: string }
+/** label is an optional short tag drawn on the connector, for example a router output name. */
+export type FlowEdge = { from: string; to: string; label?: string }
 /** A small heading above a row, to group steps (for example one Zap per row). */
 export type FlowLane = { row: number; label: string }
 
@@ -190,6 +191,7 @@ export default function ProjectFlow({ spec }: { spec: FlowSpec }) {
       return [
         {
           key: `${e.from}-${e.to}`,
+          label: e.label,
           i,
           x1,
           y1,
@@ -306,6 +308,33 @@ export default function ProjectFlow({ spec }: { spec: FlowSpec }) {
             {spec.nodes.map((n, i) => (
               <NodeTile key={n.id} node={n} active={i === active} />
             ))}
+
+            {edges
+              .filter((e) => e.label)
+              .map((e) => (
+                <span
+                  key={`label-${e.key}`}
+                  style={{
+                    position: 'absolute',
+                    left: (e.x1 + e.x2) / 2,
+                    top: (e.y1 + e.y2) / 2,
+                    transform: 'translate(-50%, -50%)',
+                    boxSizing: 'border-box',
+                    maxWidth: 80,
+                    padding: '2px 6px',
+                    borderRadius: 8,
+                    background: '#faf6ef',
+                    border: '1px solid #e6e0d6',
+                    fontSize: 10,
+                    fontWeight: 600,
+                    lineHeight: 1.15,
+                    textAlign: 'center',
+                    color: '#64748b',
+                  }}
+                >
+                  {e.label}
+                </span>
+              ))}
           </div>
         </div>
       </div>
