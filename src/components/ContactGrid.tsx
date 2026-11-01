@@ -146,7 +146,7 @@ export default function ContactGrid() {
                   post. autoComplete off so a browser never fills it either. */}
               <input
                 type="text"
-                name="website"
+                name="contact_trap"
                 tabIndex={-1}
                 autoComplete="off"
                 aria-hidden="true"

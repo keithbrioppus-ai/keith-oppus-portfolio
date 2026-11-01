@@ -3,15 +3,18 @@ import { profile } from '@/data/profile'
 /**
  * Contact submission.
  *
- * Out of the box there is no backend: submitLead() opens the visitor's mail
- * client with a message addressed to profile.email (src/data/profile.ts).
+ * With VITE_CONTACT_ENDPOINT set (for example a Formspree form URL), submitLead()
+ * sends the message there as JSON and the form emails it to the owner.
+ *
+ * With the variable unset there is no backend: submitLead() opens the visitor's
+ * mail client with a message addressed to profile.email (src/data/profile.ts).
  *
  * To wire a real backend (Formspree, a serverless function, a webhook...):
- *   1. Set VITE_CONTACT_ENDPOINT in .env.production to the URL that accepts
- *      a JSON POST of the Lead type below.
+ *   1. Set VITE_CONTACT_ENDPOINT in .env.local (for local testing) and in the
+ *      host's environment variables (for the live site) to the URL that accepts
+ *      a JSON POST.
  *   2. Have it answer 2xx on success, or a non-2xx with { "error": "..." }
  *      and that sentence is shown to the visitor as-is.
- * With the variable unset the mail client path below is used instead.
  */
 
 export const ENDPOINT: string = import.meta.env.VITE_CONTACT_ENDPOINT ?? ''
@@ -54,7 +57,10 @@ export function readLead(data: FormData): Lead | null {
   const email = sanitize(String(data.get('email') ?? '').trim()).slice(0, MAX_EMAIL)
   const message = sanitize(String(data.get('message') ?? '').trim(), true).slice(0, MAX_MESSAGE)
   if (!firstName || !lastName || !email || !message || !EMAIL_RE.test(email)) return null
-  const website = String(data.get('website') ?? '')
+  // The trap input is named contact_trap, not "website", because browsers
+  // autofill fields that look like a website box, which got real messages
+  // flagged as spam.
+  const website = String(data.get('contact_trap') ?? '')
   return { firstName, lastName, email, message, website }
 }
 
@@ -62,10 +68,19 @@ export class SubmitError extends Error {}
 
 export async function submitLead(lead: Lead): Promise<SubmitResult> {
   if (ENDPOINT) {
+    const payload = {
+      firstName: lead.firstName,
+      lastName: lead.lastName,
+      email: lead.email,
+      message: lead.message,
+      _subject: `Portfolio inquiry from ${lead.firstName} ${lead.lastName}`,
+      // Formspree's own spam trap: it discards a post where this is not empty.
+      _gotcha: lead.website,
+    }
     const res = await fetch(ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(lead),
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => null)
