@@ -57,7 +57,7 @@ export const profile: Profile = {
   // Pick any icon from https://phosphoricons.com and import it above.
   stats: [
     { value: '1 yr', label: 'U.S. admin experience', Icon: Briefcase },
-    { value: '2', label: 'Automations built', Icon: SealCheck },
+    { value: '6', label: 'Automations built', Icon: SealCheck },
     { value: 'GMT+8', label: 'Philippines', Icon: Clock },
   ],
   // The intro types this line, then flies it into the Home headline.
