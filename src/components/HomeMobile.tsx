@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { SealCheck, CaretRight, Play, Stack, Coffee } from '@/components/slab'
+import { SealCheck, CaretRight, Stack, Quotes } from '@/components/slab'
 import { profile } from '@/data/profile'
 import QuickMenu from './QuickMenu'
 
@@ -10,8 +10,8 @@ import QuickMenu from './QuickMenu'
  *                (theme + accessibility) - the rail's identity block, laid flat
  *   HomeStats    three proof facts (profile.stats), each named by a glyph so
  *                it reads at a glance
- *   HomeExplore  one shelf card per rail view in a snap row, then the first
- *                testimonial as a video stage
+ *   HomeExplore  one shelf card per rail view in a snap row, then the client
+ *                who gave feedback
  */
 
 export function HomeProfile() {
@@ -23,9 +23,7 @@ export function HomeProfile() {
           {profile.name}
           <SealCheck size={16} weight="fill" className="hprofile__verified" aria-label={profile.verifiedLabel} />
         </span>
-        <span className="hprofile__handle">
-          {profile.handle} · {profile.role}
-        </span>
+        <span className="hprofile__handle">{profile.handle}</span>
       </div>
       <QuickMenu className="hprofile__menu" />
     </header>
@@ -47,11 +45,38 @@ export function HomeStats() {
 }
 
 const TILES = [
-  { n: '01', label: 'Projects', to: '/projects', title: 'PLACEHOLDER - projects headline', desc: 'Tell me what to put here.', img: '/placeholders/project-1.jpg' },
-  { n: '02', label: 'Services', to: '/services', title: 'PLACEHOLDER - services headline', desc: 'Tell me what to put here.', Icon: Stack },
-  { n: '03', label: 'Showcase', to: '/showcase', title: 'PLACEHOLDER - your flagship', desc: 'Tell me what to put here.', Icon: Coffee, accent: true },
-  { n: '04', label: 'Testimonials', to: '/testimonials', title: 'PLACEHOLDER - testimonials headline', desc: 'Tell me what to put here.', img: '/placeholders/testimonial-1.jpg' },
-  { n: '05', label: 'About', to: '/about', title: `Hi, I'm ${profile.firstName}.`, desc: 'PLACEHOLDER - one line about you.', img: profile.avatarSrc },
+  {
+    n: '01',
+    label: 'Projects',
+    to: '/projects',
+    title: 'Automation projects I have built',
+    desc: 'Explore practical workflow automations designed to reduce manual work and improve efficiency.',
+    img: '/placeholders/lead-qualification.png',
+  },
+  {
+    n: '02',
+    label: 'Services',
+    to: '/services',
+    title: 'Virtual assistant support, with automation built in',
+    desc: 'Daily admin and executive help, plus automation workflows for the tasks that repeat.',
+    Icon: Stack,
+  },
+  {
+    n: '03',
+    label: 'Testimonials',
+    to: '/testimonials',
+    title: 'Feedback from my previous professional experience.',
+    desc: 'Insurance Professional Agency Inc.',
+    Icon: Quotes,
+  },
+  {
+    n: '04',
+    label: 'About',
+    to: '/about',
+    title: 'Meet Your Automation Partner',
+    desc: `I'm ${profile.firstName}, an administrative support professional learning and building AI-powered workflows that help businesses work more efficiently.`,
+    img: profile.avatarSrc,
+  },
 ] as const
 
 export function HomeExplore() {
@@ -63,7 +88,7 @@ export function HomeExplore() {
       <ul className="htiles" role="list">
         {TILES.map((t) => (
           <li key={t.to}>
-            <Link to={t.to} className={`htile${'accent' in t && t.accent ? ' htile--accent' : ''}`}>
+            <Link to={t.to} className="htile">
               {'img' in t ? (
                 <span className="htile__media"><img className="htile__img" src={t.img} alt="" loading="lazy" /></span>
               ) : (
@@ -88,15 +113,22 @@ export function HomeExplore() {
           </Link>
         </h2>
       </div>
-      <Link to="/testimonials" className="hproof" aria-label="Client testimonial. PLACEHOLDER - a one-line teaser for your best testimonial.">
+      <Link
+        to="/testimonials"
+        className="hproof"
+        aria-label="Client feedback from Insurance Professional Agency Inc., Abraham Boling, Owner."
+      >
         <span className="hproof__stage">
-          <img src="/placeholders/testimonial-1.jpg" alt="" loading="lazy" />
-          <span className="hproof__play" aria-hidden="true"><Play size={20} weight="fill" /></span>
-          <span className="hproof__dur" aria-hidden="true">0:00</span>
+          <img
+            src="/icons/ipa-logo.svg"
+            alt=""
+            loading="lazy"
+            style={{ objectFit: 'contain', padding: '14%', boxSizing: 'border-box', background: '#ffffff' }}
+          />
         </span>
         <span className="hproof__copy">
-          <span className="hproof__title">PLACEHOLDER - tell me what to put here: a one-line teaser for your best testimonial.</span>
-          <span className="hproof__meta">PLACEHOLDER - client role</span>
+          <span className="hproof__title">Insurance Professional Agency Inc.</span>
+          <span className="hproof__meta">Abraham Boling, Owner · Executive Support · Admin · CRM</span>
         </span>
       </Link>
     </>
