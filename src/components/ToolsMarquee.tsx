@@ -1,33 +1,19 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import './tools-sheet.css'
 
 /**
  * ToolsMarquee
  *
  * Horizontally scrolling strip of brand logos + labels for the tools you work with.
- * PLACEHOLDER - swap the list below for your own tools (icons live in public/icons/).
- * The strip lives on the cream shader page, NOT inside a dark section.
+ * The list is duplicated (`doubled`) so the CSS keyframe can translate by -50%
+ * and loop seamlessly. Single-color .svg icons with a `color` are rendered as
+ * CSS masks tinted by --brand-color; multi-color marks are plain <img> tags.
+ * The animated track is aria-hidden; the sr-only <ul> gives screen readers a
+ * clean list.
  *
- * Implementation notes:
- * - The tools list is duplicated in JSX (`doubled`) so the CSS keyframe can translate
- *   by exactly -50% and produce a seamless loop. The halfway point lands on the seam
- *   between the two copies, so the reset at 100% is invisible.
- * - Icons come in two flavors:
- *     1. Single-color simple-icons SVGs (.svg) are rendered as CSS masks tinted
- *        via a per-item `--brand-color` custom property. This lets us ship one
- *        black-shape file per brand and paint it with the brand color.
- *     2. Multi-color brand marks (PNG or multi-color SVG - GoHighLevel,
- *        Lightspeed, Claude Code, VS Code, Google Workspace) are rendered as
- *        raw `<img>` tags because gradients/layered fills cannot be reduced to
- *        a single silhouette.
- *   The renderer picks the mode by whether a `color` is set: color -> mask,
- *   no color -> img.
- * - Brand colors live in the data layer below (not tokens.css) because they are
- *   external brand identifiers, not part of the site palette. They are passed to
- *   CSS via `--brand-color` custom properties so the component stylesheet stays
- *   free of inline hex values.
- * - Accessibility: the animated track is aria-hidden because its content is
- *   duplicated and moving. The real semantic list sits in an sr-only <ul> so
- *   screen readers get a clean, deduped enumeration of the tools.
+ * On phones the strip is tappable: it opens a sheet listing every tool.
+ * To allow this on desktop too, remove the `phone &&` checks below.
  */
 
 type Tool = {
@@ -56,21 +42,64 @@ export const tools: Tool[] = [
   { name: 'Calendly',             iconPath: 'https://cdn.simpleicons.org/calendly' },
 ]
 
+function SheetIcon({ tool }: { tool: Tool }) {
+  const useMask = tool.iconPath.endsWith('.svg') && !!tool.color
+  return useMask ? (
+    <span
+      className="tools-sheet__icon"
+      style={{
+        ['--icon-url' as string]: `url('${tool.iconPath}')`,
+        ['--brand-color' as string]: tool.color ?? 'var(--navy)',
+      }}
+    />
+  ) : (
+    <img
+      className="tools-sheet__img"
+      src={tool.iconPath}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width={28}
+      height={28}
+    />
+  )
+}
+
 export default function ToolsMarquee() {
-  // Duplicate the list so the -50% translate lands on a seamless seam.
-  // useMemo keeps the doubled array reference-stable across renders.
   const doubled = useMemo(() => [...tools, ...tools], [])
 
+  const [open, setOpen] = useState(false)
+  const openerRef = useRef<HTMLButtonElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    closeRef.current?.focus()
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
+
+  const close = () => {
+    setOpen(false)
+    openerRef.current?.focus()
+  }
+
   return (
-    <section className="tools-marquee" aria-label="Tools I work with" data-reveal>
+    <section
+      className="tools-marquee tools-marquee--tappable"
+      aria-label="Tools I work with"
+      data-reveal
+    >
       <div className="tools-marquee__track" aria-hidden="true">
         {doubled.map((tool, i) => {
           const useMask = tool.iconPath.endsWith('.svg') && !!tool.color
           return (
             <div key={`${tool.name}-${i}`} className="tools-marquee__item">
-              {/* A plain box on desktop (display: contents); on phones it is
-                  the rounded app-icon tile - a masked icon cannot carry its
-                  own background, so the tile needs its own element. */}
               <span className="tools-marquee__tile">
                 {useMask ? (
                   <span
@@ -99,12 +128,67 @@ export default function ToolsMarquee() {
         })}
       </div>
 
-      {/* Real semantic list for screen readers, dedupes the visual loop. */}
+      {/* Invisible button laid over the strip, phone only. */}
+          <button
+        ref={openerRef}
+        type="button"
+        className="tools-marquee__open"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+      >
+        <span className="sr-only">Show all tools I work with</span>
+      </button>
+
       <ul className="sr-only">
         {tools.map((t) => (
           <li key={t.name}>{t.name}</li>
         ))}
       </ul>
+
+      {/* Portaled to <body> so the glass plates cannot clip or offset it. */}
+      {open &&
+        createPortal(
+          <div
+            className="tools-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tools-sheet-title"
+            onClick={close}
+          >
+            <div
+              className="tools-sheet__panel"
+              data-lenis-prevent
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="tools-sheet__head">
+                <h2 id="tools-sheet-title" className="tools-sheet__title">
+                  Tools I work with
+                </h2>
+                <button
+                  ref={closeRef}
+                  type="button"
+                  className="tools-sheet__close"
+                  onClick={close}
+                  aria-label="Close"
+                >
+                  ×
+                </button>
+              </div>
+              <ul className="tools-sheet__grid" role="list">
+                {tools.map((t) => (
+                  <li key={t.name} className="tools-sheet__item">
+                    <span className="tools-sheet__tile">
+                      <SheetIcon tool={t} />
+                    </span>
+                    <span className="tools-sheet__name">{t.name}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>,
+          document.body,
+        )}
     </section>
   )
 }

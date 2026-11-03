@@ -228,12 +228,7 @@
   font-size: clamp(12px, 0.8vw, 14px);
   color: var(--muted);
 }
-@media (min-width: 1100px) {
-  .sgrid__services {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    grid-template-rows: none;
-  }
-}
+.sgrid__services { grid-template-columns: minmax(0, 1fr); }
 .sgrid__service { list-style: none; }
 /* Every row lines up across the five cards: the description and each bullet
    reserve two lines whether they need them or not. */
@@ -369,11 +364,10 @@
   .sgrid__stage-chip, .sgrid__service-index, .sgrid__chip { font-size: 12px; }
 }
 @media (min-width: 1100px) {
-  .pgrid.sgrid {
+   .pgrid.sgrid {
     display: block;
-    height: 100%;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    height: auto;
+    overflow: visible;
   }
   .pgrid.sgrid .sgrid__glass {
     height: auto;
@@ -387,5 +381,23 @@
     flex: none;
     height: 520px;
     min-height: 520px;
+  }
+}
+/* Services cards: 1 column on phone, 2 on tablet, 4 on desktop (same as now) */
+.sgrid .bento.sgrid__services {
+  display: grid;
+  grid-auto-flow: row;
+  grid-template-rows: none;
+  grid-template-columns: minmax(0, 1fr) !important;
+  overflow: visible;
+}
+@media (min-width: 640px) {
+  .sgrid .bento.sgrid__services {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (min-width: 1100px) {
+  .sgrid .bento.sgrid__services {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   }
 }
